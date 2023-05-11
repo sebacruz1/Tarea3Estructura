@@ -3,7 +3,6 @@
 #include <string.h>
 #include <unistd.h>
 
-
 int main()
 {
     int opcion = 0;
@@ -25,6 +24,10 @@ int main()
         {
             case 1:
                 agregarTarea();
+                break;
+            default:
+                printf("Opcion no valida\n");
+                break;
         }
     } while (opcion != 0);
 }
