@@ -6,103 +6,102 @@
 #include "heap.h"
 
 typedef struct nodo{
-   void* data;
+   void* nombre;
    int priority;
-}heapElem;
+   void* tareaPrecedente;
+} heapElem;
 
 typedef struct Heap{
   heapElem* heapArray;
   int size;
-  int capac;
+  int capacity;
 } Heap;
-
 
 void* heap_top(Heap* pq)
 {
   if (pq->size == 0) return NULL;
   
-  void *top = pq->heapArray[0].data;
-  return top;
+  return pq->heapArray[0].nombre;
 }
 
-void heap_push(Heap* pq, void* data, int priority)
+void heap_push(Heap* pq, void* nombre, int priority)
 {
-  heapElem aux;
-  if (pq->size >= pq->capac)
+  if (pq->size >= pq->capacity)
   {
-    pq->capac = pq->capac * 2 + 1;
-    pq->heapArray = realloc(pq->heapArray, sizeof(heapElem) * pq->capac); 
-    
-  }
-  
-  if (pq->size == 0)
-  {
-    pq->heapArray[0].data = data;
-    pq->heapArray[0].priority = priority;
-    pq->size++;
-    return; 
-  }
-  
-  pq->heapArray[pq->size].data = data;
-  pq->heapArray[pq->size].priority = priority;
-  int posicion = pq->size;
-  int padre = (posicion - 1) / 2;
-
-  while (pq->heapArray[posicion].priority > pq->heapArray[padre].priority)
-  {
-    if (pq->heapArray[posicion].priority > pq->heapArray[padre].priority)
-    {
-      aux = pq->heapArray[posicion];
-      pq->heapArray[posicion] = pq->heapArray[padre];
-      pq->heapArray[padre] = aux;
-      posicion = padre;
-      padre = (posicion - 1) / 2;
+    pq->capacity = pq->capacity * 2 + 1;
+    pq->heapArray = realloc(pq->heapArray, sizeof(heapElem) * pq->capacity); 
+    if (!pq->heapArray) {
+      printf("Error: no se pudo expandir el heap.\n");
+      exit(EXIT_FAILURE);
     }
   }
   
+  int posicion = pq->size;
+  pq->heapArray[posicion].nombre = nombre;
+  pq->heapArray[posicion].priority = priority;
   pq->size++;
+
+  while (posicion > 0)
+  {
+    int padre = (posicion - 1) / 2;
+
+    if (pq->heapArray[posicion].priority <= pq->heapArray[padre].priority) break;
+
+    heapElem aux = pq->heapArray[posicion];
+    pq->heapArray[posicion] = pq->heapArray[padre];
+    pq->heapArray[padre] = aux;
+
+    posicion = padre;
+  }
 }
 
 void heap_pop(Heap* pq)
 {
-  if (pq->size == 0)
-        return;
-    pq->heapArray[0] = pq->heapArray[pq->size - 1];
-    pq->size--;
-    int posicion = 0;
-    while (1)
-    {
-        int hijoIzq = 2 * posicion + 1;
-        int hijoDer = 2 * posicion + 2;
-        if (hijoIzq >= pq->size && hijoDer >= pq->size)
-            break;
-        heapElem aux;
-        int hijoMayor = hijoIzq;
-        if (hijoDer < pq->size && pq->heapArray[hijoDer].priority > pq->heapArray[hijoIzq].priority)
-            hijoMayor = hijoDer;
-        if (pq->heapArray[hijoMayor].priority > 
-            pq->heapArray[posicion].priority)
-        {
-            aux = pq->heapArray[hijoMayor];
-            pq->heapArray[hijoMayor] = pq->heapArray[posicion];
-            pq->heapArray[posicion] = aux;
-            posicion = hijoMayor;
-        }
-        else
-        {
-            break;
-        }
-    }
-}
+  if (pq->size == 0) return;
 
+  pq->heapArray[0] = pq->heapArray[pq->size - 1];
+  pq->size--;
+
+  int posicion = 0;
+
+  while (posicion < pq->size)
+  {
+    int hijoIzq = 2 * posicion + 1;
+    int hijoDer = 2 * posicion + 2;
+
+    if (hijoIzq >= pq->size) break;
+
+    int hijoMayor = hijoIzq;
+
+    if (hijoDer < pq->size && pq->heapArray[hijoDer].priority > pq->heapArray[hijoIzq].priority)
+      hijoMayor = hijoDer;
+
+    if (pq->heapArray[hijoMayor].priority <= pq->heapArray[posicion].priority) break;
+
+    heapElem aux = pq->heapArray[posicion];
+    pq->heapArray[posicion] = pq->heapArray[hijoMayor];
+    pq->heapArray[hijoMayor] = aux;
+
+    posicion = hijoMayor;
+  }
+}
 
 Heap* createHeap()
 {
-  Heap *new; 
-  new = malloc(3 * sizeof(Heap));
-  new->heapArray = malloc(3 * sizeof(Heap));
-  new->size = 0; 
-  new->capac = 3;
+  Heap* new = malloc(sizeof(Heap)); 
+  if (!new) {
+    printf("Error: no se pudo crear el heap.\n");
+    exit(EXIT_FAILURE);
+  }
+
+  new->heapArray = malloc(3 * sizeof(heapElem));
+  if (!new->heapArray) {
+    printf("Error: no se pudo crear el array del heap.\n");
+    exit(EXIT_FAILURE);
+  }
+
+  new->size = 0;  
+  new->capacity = 3;
 
   return new;
 }
