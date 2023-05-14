@@ -19,7 +19,7 @@ void agregarTarea(Heap *tareas)
 
 void mostrarTareas(Heap *tareas)
 {
-    Heap *aux = createHeap();
+    Heap *aux = createHeap(compareMin);
     if (aux == NULL)
     {
         printf("Error al crear el heap auxiliar\n");
@@ -66,7 +66,7 @@ void mostrarTareas(Heap *tareas)
 int main()
 {
     int opcion = 0;
-    Heap *tareas = createHeap();
+    Heap *tareas = createHeap(compareMin);
     if (tareas == NULL)
     {
         printf("Error al crear el heap\n");

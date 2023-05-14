@@ -15,13 +15,14 @@ typedef struct Heap{
   heapElem* heapArray;
   int size;
   int capacity;
+  int (*comparator)(const void*, const void*);
 } Heap;
 
 void* heap_top(Heap* pq)
 {
   if (pq->size == 0) return NULL;
   
-  return pq->heapArray[0].nombre;
+  return pq->heapArray[pq->size - 1].nombre;
 }
 
 void heap_push(Heap* pq, void* nombre, int priority)
@@ -45,7 +46,7 @@ void heap_push(Heap* pq, void* nombre, int priority)
   {
     int padre = (posicion - 1) / 2;
 
-    if (pq->heapArray[posicion].priority <= pq->heapArray[padre].priority) break;
+    if (pq->comparator(&pq->heapArray[posicion], &pq->heapArray[padre]) >= 0) break;
 
     heapElem aux = pq->heapArray[posicion];
     pq->heapArray[posicion] = pq->heapArray[padre];
@@ -73,10 +74,10 @@ void heap_pop(Heap* pq)
 
     int hijoMayor = hijoIzq;
 
-    if (hijoDer < pq->size && pq->heapArray[hijoDer].priority > pq->heapArray[hijoIzq].priority)
+    if (hijoDer < pq->size && pq->comparator(&pq->heapArray[hijoDer], &pq->heapArray[hijoIzq]) < 0)
       hijoMayor = hijoDer;
 
-    if (pq->heapArray[hijoMayor].priority <= pq->heapArray[posicion].priority) break;
+    if (pq->comparator(&pq->heapArray[hijoMayor], &pq->heapArray[posicion]) >= 0) break;
 
     heapElem aux = pq->heapArray[posicion];
     pq->heapArray[posicion] = pq->heapArray[hijoMayor];
@@ -86,7 +87,16 @@ void heap_pop(Heap* pq)
   }
 }
 
-Heap* createHeap()
+int compareMin(const void* a, const void* b) {
+  const heapElem* elemA = (const heapElem*) a;
+  const heapElem* elemB = (const heapElem*) b;
+  
+  if (elemA->priority < elemB->priority) return -1;
+  if (elemA->priority > elemB->priority) return 1;
+  return 0;
+}
+
+Heap* createHeap(int (*comparator)(const void*, const void*))
 {
   Heap* new = malloc(sizeof(Heap)); 
   if (!new) {
@@ -102,6 +112,8 @@ Heap* createHeap()
 
   new->size = 0;  
   new->capacity = 3;
+  new->comparator = comparator; // Nuevo campo
 
   return new;
 }
+
