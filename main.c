@@ -1,64 +1,83 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
-#include "heap.h"
-#include "heap.c"
+#include <stdbool.h>
+#include "list.h"
+#include "Map.h"
+#include <stdlib.h>
 
-void agregarTarea(Heap *tareas)
+typedef struct tarea
 {
-    char *nombre = malloc(sizeof(char) * 100);
-    int prioridad = 0;
-    printf("Ingrese el nombre de la tarea: ");
-    scanf("%s", nombre);
-    printf("Ingrese la prioridad de la tarea: ");
-    scanf("%d", &prioridad);
-    heap_push(tareas, nombre, prioridad);
+    char* nombre;
+    int prioridad;
+    List *dependencias;
+    int cantDependencias;
+    bool visitada;
+} tareas;
+
+int is_equal_string(void *key1, void *key2)
+{
+    if (strcmp((char *)key1, (char *)key2) == 0)
+    {
+        return 1;
+    }
+    return 0;
 }
 
-
-void mostrarTareas(Heap *tareas)
+void agregarTarea(Map *mapaTareas)
 {
-    Heap *aux = createHeap(compareMin);
-    if (aux == NULL)
+    tareas *tarea = (tareas *)malloc(sizeof(tareas));
+    char nombreTarea[50];
+    int prioridadTarea = 0;
+    tarea->visitada = false;
+
+    printf("Ingrese el nombre de la tarea: ");
+    scanf("%s", nombreTarea);
+    printf("Ingrese la prioridad de la tarea: ");
+    scanf("%d", &prioridadTarea);
+
+    tarea->prioridad = prioridadTarea;
+
+    insertMap(mapaTareas, tarea->nombre, tarea);
+}
+
+void establecerPrecedencia(Map *mapaTareas)
+{
+    char nombreTarea[50];
+    char nombreDependencia[50];
+    printf("Ingrese el nombre de la tarea: ");
+    scanf("%s", nombreTarea);
+    printf("Ingrese el nombre de la dependencia: ");
+    scanf("%s", nombreDependencia);
+
+    tareas *tarea = searchMap(mapaTareas, nombreTarea);
+    tareas *dependencia = searchMap(mapaTareas, nombreDependencia);
+
+    if (tarea != NULL && dependencia != NULL)
     {
-        printf("Error al crear el heap auxiliar\n");
-        return;
+        pushBack(tarea->dependencias, dependencia);
+        tarea->cantDependencias++;
     }
-
-    if (tareas->size == 0)
+    else
     {
-        printf("No hay tareas por hacer\n");
-        return;
+        printf("No se encontro la tarea o la dependencia\n");
     }
+}
 
-    printf("Tareas por hacer:\n");
+void marcarTareaPorHacer(Map *mapaTareas)
+{
+    char nombreTarea[50];
+    printf("Ingrese el nombre de la tarea: ");
+    scanf("%s", nombreTarea);
 
-    while (tareas->size > 0)
+    tareas *tarea = searchMap(mapaTareas, nombreTarea);
+    if (tarea != NULL)
     {
-        heapElem tarea = tareas->heapArray[0];
-        printf("%s ", tarea.nombre);
-        printf("Prioridad: %d", tarea.priority);
-        if (tarea.tareaPrecedente != NULL)
-        {
-            printf(" - Precedente: %s\n", tarea.tareaPrecedente);
-        }
-        else 
-        {
-            printf("\n");
-        }
-        heap_push(aux, tarea.nombre, tarea.priority);
-        heap_pop(tareas);
+        eraseMap(mapaTareas, tarea->nombre);
     }
-
-    while (aux->size > 0)
+    else
     {
-        heapElem tarea = aux->heapArray[0];
-        heap_push(tareas, tarea.nombre, tarea.priority);
-        heap_pop(aux);
+        printf("No se encontro la tarea\n");
     }
-
-    free(aux);
 }
 
 
@@ -66,10 +85,11 @@ void mostrarTareas(Heap *tareas)
 int main()
 {
     int opcion = 0;
-    Heap *tareas = createHeap(compareMin);
-    if (tareas == NULL)
+    Map *mapaTareas = createMap(is_equal_string);
+
+    if (mapaTareas == NULL)
     {
-        printf("Error al crear el heap\n");
+        printf("Error al crear el mapa\n");
         return 1;
     }
 
@@ -89,12 +109,16 @@ int main()
         switch (opcion)
         {
             case 1:
-                agregarTarea(tareas);
+                agregarTarea(mapaTareas);            
                 break;
             case 2:
+                establecerPrecedencia(mapaTareas);
                 break;
             case 3:
-                mostrarTareas(tareas);
+                //mostrarTareasPorHacer(mapaTareas);
+                break;
+            case 4:
+                marcarTareaComoCompletada(mapaTareas);
                 break;
         
             case 0: 
