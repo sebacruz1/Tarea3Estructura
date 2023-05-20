@@ -3,8 +3,8 @@
 #include <stdbool.h>
 #include "list.h"
 #include "Map.h"
+#include "stack.h"
 #include <stdlib.h>
-
 typedef struct tarea
 {
     char* nombre;
@@ -12,6 +12,8 @@ typedef struct tarea
     List *dependencias;
     int cantDependencias;
     bool visitada;
+    Stack *undo;
+    int cantUndos;
 } tareas;
 
 int is_equal_string(void *key1, void *key2)
@@ -36,6 +38,11 @@ void agregarTarea(Map *mapaTareas)
     scanf("%d", &prioridadTarea);
 
     tarea->prioridad = prioridadTarea;
+    tarea->nombre = nombreTarea;
+    tarea->cantDependencias = 0;
+    tarea->dependencias = createList();
+    tarea->undo = stack_create();
+    tarea->cantUndos = 0;
 
     insertMap(mapaTareas, tarea->nombre, tarea);
 }
@@ -54,8 +61,11 @@ void establecerPrecedencia(Map *mapaTareas)
 
     if (tarea != NULL && dependencia != NULL)
     {
+        stack_push(tarea->undo, tarea);
+        tarea->cantUndos++;
         pushBack(tarea->dependencias, dependencia);
         tarea->cantDependencias++;
+
     }
     else
     {
@@ -73,6 +83,8 @@ void marcarTareaPorHacer(Map *mapaTareas)
     if (tarea != NULL)
     {
         eraseMap(mapaTareas, tarea->nombre);
+        stack_push(tarea->undo, tarea);
+        tarea->cantUndos++;
     }
     else
     {
@@ -80,12 +92,55 @@ void marcarTareaPorHacer(Map *mapaTareas)
     }
 }
 
+void marcarTareaComoCompletada(Map *mapaTareas)
+{
+    char nombreTarea[50];
+    printf("Ingrese el nombre de la tarea: ");
+    scanf("%s", nombreTarea);
 
+    tareas *tarea = searchMap(mapaTareas, nombreTarea);
+    if (tarea != NULL)
+    {
+        stack_push(tarea->undo, tarea);
+        tarea->cantUndos++;
+        eraseMap(mapaTareas, tarea->nombre);
+    }
+    else
+    {
+        printf("No se encontro la tarea\n");
+    }
+}
+
+void deshacerUltimaAccion(Map *mapaTareas)
+{
+    char nombreTarea[50];
+    printf("Ingrese el nombre de la tarea: ");
+    scanf("%s", nombreTarea);
+
+    tareas *tarea = searchMap(mapaTareas, nombreTarea);
+    if (tarea != NULL)
+    {
+        if (tarea->cantUndos > 0)
+        {
+            tareas *tareaUndo = stack_pop(tarea->undo);
+            insertMap(mapaTareas, tareaUndo->nombre, tareaUndo);
+        }
+        else
+        {
+            printf("No hay acciones para deshacer\n");
+        }
+    }
+    else
+    {
+        printf("No se encontro la tarea\n");
+    }
+}
 
 int main()
 {
     int opcion = 0;
     Map *mapaTareas = createMap(is_equal_string);
+    
 
     if (mapaTareas == NULL)
     {
@@ -119,6 +174,9 @@ int main()
                 break;
             case 4:
                 marcarTareaComoCompletada(mapaTareas);
+                break;
+            case 5:
+                deshacerUltimaAccion(mapaTareas);
                 break;
         
             case 0: 
