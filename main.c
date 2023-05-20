@@ -25,6 +25,46 @@ int is_equal_string(void *key1, void *key2)
     return 0;
 }
 
+const char *get_csv_field (char * tmp, int k) 
+{
+    int open_mark = 0;
+    char* ret=(char*) malloc (100*sizeof(char));
+    int ini_i=0, i=0;
+    int j=0;
+    while (tmp[i+1]!='\0'){
+
+        if (tmp[i]== '\"'){
+            open_mark = 1-open_mark;
+            if(open_mark) ini_i = i+1;
+            i++;
+            continue;
+        }
+
+        if (open_mark || tmp[i]!= ','){
+            if(k==j) ret[i-ini_i] = tmp[i];
+            i++;
+            continue;
+        }
+
+        if (tmp[i]== ','){
+            if(k==j) {
+               ret[i-ini_i] = 0;
+               return ret;
+            }
+            j++; ini_i = i+1;
+        }
+
+        i++;
+    }
+
+    if (k==j) {
+       ret[i-ini_i] = 0;
+       return ret;
+    }
+
+    return NULL;
+}
+
 void agregarTarea(Map *mapaTareas)
 {
     tareas *tarea = (tareas *)malloc(sizeof(tareas));
@@ -136,6 +176,51 @@ void deshacerUltimaAccion(Map *mapaTareas)
     }
 }
 
+void cargarDatos(Map *mapaTareas)
+{
+    char nombre[20];
+    tareas *tarea = malloc(sizeof(tarea));
+    printf("Ingrese el nombre del archivo: ");
+    scanf("%s", nombre);
+    strcat(nombre, ".cvs");
+
+    FILE *fp = fopen(nombre, "r");
+
+    if (fp == NULL)
+    {
+        printf("No se pudo abrir el archivo\n");
+        return;
+    }
+
+    char linea[1024];
+    int k;
+    
+    while (fgets(linea, 1023, fp) != NULL)
+    {
+        for (int i = 0; i < 3; i++)
+        {
+            const char *tmp = get_csv_field(linea, i);
+            if (i == 0)
+            {
+                tarea->nombre = (char *)tmp;
+            }
+            else if (i == 1)
+            {
+                tarea->prioridad = atoi(tmp);
+            }
+            else
+            {
+                tarea->dependencias = createList();
+                pushBack(tarea->dependencias, tmp);
+                tarea->cantDependencias++;
+            }
+            insertMap(mapaTareas, tarea->nombre, tarea);
+        }
+    }
+
+
+}
+
 int main()
 {
     int opcion = 0;
@@ -178,7 +263,9 @@ int main()
             case 5:
                 deshacerUltimaAccion(mapaTareas);
                 break;
-        
+            case 6: 
+                cargarDatos(mapaTareas);
+                break;
             case 0: 
                 printf("Saliendo...\n");
                 return 0;
