@@ -114,7 +114,60 @@ void establecerPrecedencia(Map *mapaTareas)
     }
 }
 
-void mostrarTareas(Map *mapaTareas)
+void mostrarTareasPorHacer(Map *mapaTareas)
+{
+    Heap *heap = createHeap();
+    tareas *tarea = malloc(sizeof(tareas));
+    int aux = 0;
+    while (tarea != NULL)
+    {
+        tarea = firstMap(mapaTareas);
+        if (tarea == NULL) break;
+        if (tarea->cantDependencias == 0)
+            tarea->visitada = true;
+            aux++;
+        
+        tarea = nextMap(mapaTareas);
+    }
+
+    for (int i = 0; i < aux; i++)
+    {
+        pushBack(listaOrdenada, heap_top(mapaTareas));
+        heap_pop(mapaTareas);
+    }
+
+    while (1)
+    {
+        tarea = firstMap(mapaTareas);
+        if (tarea == NULL) break;
+        if (tarea->visitada == false)
+        {
+            for (int i = 0; i < tarea->cantDependencias; i++)
+            {
+                tareas *dependencia = first(tarea->dependencias);
+                if (dependencia->visitada == false)
+                {
+                    tarea->visitada = true;
+                    pushBack(listaOrdenada, tarea);
+                    break;
+                }
+                else
+                {
+                    tarea->visitada = true;
+                    pushBack(listaOrdenada, tarea);
+                }
+            }
+        }
+        tarea = nextMap(mapaTareas);
+        
+    }
+
+}
+
+
+
+
+/*void mostrarTareas(Map *mapaTareas)
 {
     Heap *heap = createHeap();
     tareas *tarea = malloc(sizeof(tareas));
@@ -138,10 +191,32 @@ void mostrarTareas(Map *mapaTareas)
 
     while (1)
     {
+        tarea = firstMap(mapaTareas);
+        if (tarea == NULL) break;
+        if (tarea->visitada == false)
+        {
+            for (int i = 0; i < tarea->cantDependencias; i++)
+            {
+                tareas *dependencia = first(tarea->dependencias);
+                if (dependencia->visitada == false)
+                {
+                    tarea->visitada = true;
+                    pushBack(listaOrdenada, tarea);
+                    break;
+                }
+                else
+                {
+                    tarea->visitada = true;
+                    pushBack(listaOrdenada, tarea);
+                }
+            }
+        }
+        tarea = nextMap(mapaTareas);
         
     }
 
-}
+}*/
+
 
 void marcarTareaPorHacer(Map *mapaTareas)
 {
