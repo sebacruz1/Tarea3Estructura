@@ -4,6 +4,7 @@
 #include "list.h"
 #include "Map.h"
 #include "stack.h"
+#include "heap.h"
 #include <stdlib.h>
 typedef struct tarea
 {
@@ -111,6 +112,35 @@ void establecerPrecedencia(Map *mapaTareas)
     {
         printf("No se encontro la tarea o la dependencia\n");
     }
+}
+
+void mostrarTareas(Map *mapaTareas)
+{
+    Heap *heap = createHeap();
+    tareas *tarea = malloc(sizeof(tareas));
+    int aux = 0;
+    while (tarea != NULL)
+    {
+        tarea = firstMap(mapaTareas);
+        if (tarea == NULL) break;
+        if (tarea->cantDependencias == 0)
+            tarea->visitada = true;
+            aux++;
+        
+        tarea = nextMap(mapaTareas);
+    }
+
+    for (int i = 0; i < aux; i++)
+    {
+        pushBack(listaOrdenada, heap_top(heapTareas));
+        heap_pop(heapTareas);
+    }
+
+    while (1)
+    {
+        
+    }
+
 }
 
 void marcarTareaPorHacer(Map *mapaTareas)
